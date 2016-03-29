@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 #function that copies the bam and index files from the remote directory
-def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlog):
+def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlog,passwd):
 	
 	
 	#create sample, timepoint, and run directories if they don't already exist
@@ -45,17 +45,17 @@ def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlo
 		#the sequencing data can be either in Pluto or in Mercury
 		if remoteId == 'PLU':
 			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/*.bam  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/*.bam  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 			elif backedUp == 'No':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/*.bam  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/*.bam  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 		elif remoteId == 'MER':
 			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/*.bam  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/*.bam  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 			elif backedUp == 'No':	
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/*.bam  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/*.bam  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 	else:
 		with open(outlog, 'a') as logfile:
@@ -66,17 +66,17 @@ def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlo
 			logfile.write('copying bam index file\n')
 		if remoteId == 'PLU':
 			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/*.bam.bai  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 			elif backedUp == 'No':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/*.bam.bai  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 		elif remoteId == 'MER':
 			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/*.bam.bai  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 			elif backedUp == 'No':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/*.bam.bai  %s' %('ionadmin',remoteDir,runDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
 				os.system(command)
 	else:
 		with open(outlog, 'a') as logfile:
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 			logfile.write('This run was not yet archived\n')
 
 	#copy the bam & index files
-	copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlog)
+	copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlog,passwd)
 	
 	# run the RNASeqPlugin
 	run_rnaseqPlugin(projDir,sampleName,timePoint,runId,outlog)

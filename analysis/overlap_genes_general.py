@@ -81,6 +81,17 @@ def enrich_genes():
 	return enrich_genesList
 
 
+#list of genes that Tomo has provided for LS; includes housekeeping and genes of interest
+#03/22/2016
+def ls_genes():
+	supportDir = '/rawdata/projects/RNA-seq/support_files'
+	ls_genesList = []
+	with open('%s/ls_genes_tomo.txt' %supportDir, 'rb') as ls:
+		for line in ls:
+			ls_genesList.append(line.strip())
+	return ls_genesList
+
+
 def transcript_express_compare():
 	#samples = ['LV4','LV5','LV6']
 	samples = ['LV5',]

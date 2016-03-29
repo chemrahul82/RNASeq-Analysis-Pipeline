@@ -1,8 +1,3 @@
-# RNASeq-Analysis-Pipeline
-Contains all the scripts for RNA-SEQ data analysis pipeline and the scripts for downstream analyses
-
-pipeline changelog:
-
 ChangeLog:
 
 v1: only supports single-run analysis; no ERCC analysis included
