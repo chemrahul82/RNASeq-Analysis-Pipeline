@@ -93,48 +93,38 @@ def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,outlog,passwd)
 		if remoteId == 'PLU':
 			#first look for the mapped bam file
 			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/%s.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
-			try:
-				os.system(command)
-			except Exception:
-				sys.exc_clear()
-			else:	
+			ex=os.system(command)
+			if int(ex)==0:
 				with open(outlog, 'a') as logfile:
 					logfile.write('successfully copied mapped bam from remote directory %s\n' %remoteDir)
-			
 			#if mapped bam was not found, look for the unmapped bam file in the basecaller_results directory
-			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
-			try:
-				os.system(command)
-			except Exception:
-				sys.exc_clear()
 			else:
-				os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
-				with open(outlog, 'a') as logfile:
-					logfile.write('successfully copied unmapped bam from remote directory %s\n'%remoteDir)
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+				ex = os.system(command)
+				if int(ex)==0:
+					os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
+					with open(outlog, 'a') as logfile:
+						logfile.write('successfully copied unmapped bam from remote directory %s\n'%remoteDir)
+				#the data probably have been archived; look in the archived reports
+				else:
+					command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/%s.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+					ex = os.system(command)
+					if int(ex) == 0:
+						with open(outlog, 'a') as logfile:
+							logfile.write('successfully copied mapped bam from remote archivereport directory %s\n'%remoteDir)
+					else:
+						command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+						ex = os.system(command)
+						if int(ex) == 0:
+							os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
+							with open(outlog, 'a') as logfile:
+								logfile.write('successfully copied unmapped bam file from remote archivereport directory %s\n')	
+						else:	
+							with open(outlog, 'a') as logfile:
+								logfile.write('Could not locate bam file in the remote server; exiting')
+								sys.exit()
+		
 				
-			#the data probably have been archived; look in the archived reports
-			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/%s.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
-			try:
-				os.system(command)
-			except Exception:
-				sys.exc_clear()
-			else:
-				with open(outlog, 'a') as logfile:
-					logfile.write('successfully copied mapped bam from remote archivereport directory %s\n'%remoteDir)
-	
-			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
-			try:
-				os.system(command)
-			except Exception:
-				with open(outlog, 'a') as logfile:
-					logfile.write('Could not locate bam file in the remote server; exiting')
-				sys.exit()
-			else:
-				os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
-				with open(outlog, 'a') as logfile:
-					logfile.write('successfully copied unmapped bam file from remote archivereport directory %s\n')	
-			
-	
 def run_rnaseqPlugin(projDir,sampleName,timePoint,runId,outlog):
 	with open(outlog, 'a') as logfile:
 		logfile.write('Started RNASeqPlugin at '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'\n')
