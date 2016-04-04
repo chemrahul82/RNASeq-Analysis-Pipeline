@@ -26,14 +26,23 @@
 #nohup python -u rnaSeqpipe_032316.py /rawdata/projects/RNA-seq/LS LS_564 None Run1 Auto_user_Pluto-888-Lung_Squamous_RNA_LS0564_Run2_A_962_1849 PLU No > /dev/null 2>&1&
 #sleep 5m
 #nohup python -u rnaSeqpipe_032316.py /rawdata/projects/RNA-seq/LS LS_576 None Run2 Auto_user_Pluto-889-Lung_Squamous_RNA_LS0576_Run2_A_963_1851 PLU No > /dev/null 2>&1&
-
-
-
+#nohup python -u rnaSeqpipe_v2.1.py /rawdata/projects/RNA-seq/LS LS_621 None Run3 Auto_user_Mercury-515-Lung_Squamous_RNA_LS0621_Run3_D_923_1792 MER single ionadmin> nohup.out 2>&1&
+#sleep 5m
+#nohup python -u rnaSeqpipe_v2.2.py /rawdata/projects/RNA-seq/LS LS_621 None Run2 Auto_user_Mercury-513-Lung_Squamous_RNA_LS0621_Run2_B_921_1788 MER single ionadmin> nohup.out 2>&1&
+sleep 2h
+nohup python -u rnaSeqpipe_v2.1.py /rawdata/projects/RNA-seq/LS LS_485 None Run2 Auto_user_Mercury-509-Lung_Squamous_RNA_LS0485_Run1_B_914_1780 MER single ionadmin> /dev/null 2>&1&
+sleep 2h
+nohup python -u rnaSeqpipe_v2.1.py /rawdata/projects/RNA-seq/LS LS_485 None Run3 Auto_user_Mercury-514-Lung_Squamous_RNA_LS0485_Run3_B_922_1790 MER single ionadmin> /dev/null 2>&1&
+sleep 2h
+nohup python -u rnaSeqpipe_v2.1.py /rawdata/projects/RNA-seq/LS LS_564 None Run2 Auto_user_Pluto-892-Lung_Squamous_RNA_LS0564_Run3_A_969_1857 PLU single ionadmin> /dev/null 2>&1&
+sleep 2h
+nohup python -u rnaSeqpipe_v2.1.py /rawdata/projects/RNA-seq/LS LS_462 None Run2 Auto_user_Pluto-893-Lung_Squamous_RNA_LS0462_Run2_B_970_1859 PLU single ionadmin> /dev/null 2>&1&
 
 
 #merge runs
 #nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_484 None Merged NA NA NA merged > nohup.out 2>&1&
 #nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_576 None Merged NA NA NA merged > /dev/null 2>&1&
 #nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_549 None Merged NA NA NA merged > /dev/null 2>&1& 
-nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_543 None Merged NA NA NA merged > /dev/null 2>&1&
-nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_559 None Merged NA NA NA merged > /dev/null 2>&1&
+#nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_543 None Merged NA NA NA merged > /dev/null 2>&1&
+#nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_559 None Merged NA NA NA merged > /dev/null 2>&1&
+#nohup python -u rnaSeqpipe.py /rawdata/projects/RNA-seq/LS LS_621 None Merged NA NA NA merged > /dev/null 2>&1&

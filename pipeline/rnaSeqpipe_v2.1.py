@@ -1,14 +1,14 @@
 #this script copies the bam and index files for the liver RNA-seq from the archived reports of Pluto or Mercury
 #Author: Rahul K. Das
 #Date: 12/04/2015
-# last updated 03/29/2016
+# last updated 04/01/2016: empty_dummy bam check
 
 import os, sys, glob
 from datetime import datetime
+import time
 
-
-#function that copies the bam and index files from the remote directory
-def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlog,passwd):
+#function that copies the bam files from the remote directory
+def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,outlog,passwd):
 	
 	
 	#create sample, timepoint, and run directories if they don't already exist
@@ -17,7 +17,7 @@ def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlo
 		os.mkdir(sampleDir)
 	else:
 		with open(outlog, 'a') as logfile:
-			logfile.write('sample directory already exists; not overwriting\n')
+			logfile.write('Sample directory already exists; not overwriting\n')
 	
 	#for liver samples that have time-points
 	if timePoint != 'None':
@@ -26,7 +26,7 @@ def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlo
 			os.mkdir(timeDir)
 		else:
 			with open(outlog, 'a') as logfile:
-				logfile.write('time point directory already exists; not overwriting\n')
+				logfile.write('Time point directory already exists; not overwriting\n')
 	#samples where different time points do not exist
 	else:
 		timeDir = sampleDir
@@ -37,55 +37,103 @@ def copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlo
 		os.mkdir(runDir)
 	else:
 		with open(outlog, 'a') as logfile:
-			logfile.write('run directory already exists; not overwriting\n')
+			logfile.write('Run directory already exists; not overwriting\n')
 	
 	#copy bam and index files if they don't already exist
 	os.chdir(runDir)
+	BAMPREFX='RNA_Barcode_None_001_rawlib' #prefix of bam if no barcode
+
+	#if empty_dummy bam present from previous transfer of a run where coverageanalysis failed and couldn't generate the mapped bam, delete everything
+	if "empty_dummy.bam" in glob.glob("*.bam"):
+		os.system('rm -r *')
+	
+	 
 	if len(glob.glob("*.bam")) == 0:
 		with open(outlog, 'a') as logfile:
-			logfile.write('copying bam file\n')
-		#the sequencing data can be either in Pluto or in Mercury
-		if remoteId == 'PLU':
-			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/*.bam  %s' %(passwd,remoteDir,runDir)
-				os.system(command)
-			elif backedUp == 'No':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/*.bam  %s' %(passwd,remoteDir,runDir)
-				os.system(command)
-		elif remoteId == 'MER':
-			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/*.bam  %s' %(passwd,remoteDir,runDir)
-				os.system(command)
-			elif backedUp == 'No':	
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/*.bam  %s' %(passwd,remoteDir,runDir)
-				os.system(command)
-	else:
-		with open(outlog, 'a') as logfile:
-			logfile.write('bam file already exists, not copying\n')
+			logfile.write('Copying bam file\n')
 
-	if len(glob.glob("*.bam.bai")) == 0:
-		with open(outlog, 'a') as logfile:
-			logfile.write('copying bam index file\n')
+		#the sequencing data can be either in Pluto or in Mercury
+		#copy bam from Mercury 
+		if remoteId == 'MER':
+			#first look for the mapped bam file
+			command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/%s.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+			ex=os.system(command)
+			if int(ex)==0:
+				with open(outlog, 'a') as logfile:
+					logfile.write('successfully copied mapped bam from remote directory %s\n' %remoteDir)
+			#if mapped bam was not found, look for the unmapped bam file in the basecaller_results directory
+			else:
+				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+				ex = os.system(command)
+				if int(ex)==0:
+					os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
+					with open(outlog, 'a') as logfile:
+						logfile.write('successfully copied unmapped bam from remote directory %s\n'%remoteDir)
+				#the data probably have been archived; look in the archived reports
+				else:
+					command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/%s.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+					ex = os.system(command)
+					if int(ex) == 0:
+						with open(outlog, 'a') as logfile:
+							logfile.write('successfully copied mapped bam from remote archivereport directory %s\n'%remoteDir)
+					else:
+						command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+						ex = os.system(command)
+						if int(ex) == 0:
+							os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
+							with open(outlog, 'a') as logfile:
+								logfile.write('successfully copied unmapped bam file from remote archivereport directory %s\n')	
+						else:	
+							with open(outlog, 'a') as logfile:
+								logfile.write('Could not locate bam file in the remote server; exiting')
+								sys.exit()
+		
+		
+		#Copy bam from From Pluto			
 		if remoteId == 'PLU':
-			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
+			#first look for the mapped bam file
+			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/%s.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+			try:
 				os.system(command)
-			elif backedUp == 'No':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
+			except Exception:
+				sys.exc_clear()
+			else:	
+				with open(outlog, 'a') as logfile:
+					logfile.write('successfully copied mapped bam from remote directory %s\n' %remoteDir)
+			
+			#if mapped bam was not found, look for the unmapped bam file in the basecaller_results directory
+			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/results/analysis/output/Home/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+			try:
 				os.system(command)
-		elif remoteId == 'MER':
-			if backedUp == 'Yes':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/mnt/Triton/archivedReports/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
+			except Exception:
+				sys.exc_clear()
+			else:
+				os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
+				with open(outlog, 'a') as logfile:
+					logfile.write('successfully copied unmapped bam from remote directory %s\n'%remoteDir)
+				
+			#the data probably have been archived; look in the archived reports
+			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/%s.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+			try:
 				os.system(command)
-			elif backedUp == 'No':
-				command = 'sshpass -p %s scp -r ionadmin@192.168.200.41:/results/analysis/output/Home/%s/*.bam.bai  %s' %(passwd,remoteDir,runDir)
-				os.system(command)
-	else:
-		with open(outlog, 'a') as logfile:
-			logfile.write('bam index file already exists, not copying\n')
-	with open(outlog, 'a') as logfile:
-		logfile.write('finished copying bam & index files from remote directory %s\n' %remoteDir)
+			except Exception:
+				sys.exc_clear()
+			else:
+				with open(outlog, 'a') as logfile:
+					logfile.write('successfully copied mapped bam from remote archivereport directory %s\n'%remoteDir)
 	
+			command = 'sshpass -p %s scp -r ionadmin@192.168.200.42:/mnt/Charon/archivedReports/%s/basecaller_results/%s.basecaller.bam  %s' %(passwd,remoteDir,BAMPREFX,runDir)
+			try:
+				os.system(command)
+			except Exception:
+				with open(outlog, 'a') as logfile:
+					logfile.write('Could not locate bam file in the remote server; exiting')
+				sys.exit()
+			else:
+				os.rename('%s.basecaller.bam' %BAMPREFX,'%s.bam' %BAMPREFX)
+				with open(outlog, 'a') as logfile:
+					logfile.write('successfully copied unmapped bam file from remote archivereport directory %s\n')	
+			
 	
 def run_rnaseqPlugin(projDir,sampleName,timePoint,runId,outlog):
 	with open(outlog, 'a') as logfile:
@@ -166,12 +214,13 @@ if __name__ == "__main__":
 	runId = sys.argv[4]
 	remoteDir = sys.argv[5]
 	remoteId = sys.argv[6]
-	backedUp = sys.argv[7]
-	merged_single = sys.argv[8]
+	#backedUp = sys.argv[7]
+	merged_single = sys.argv[7]
+	passwd = sys.argv[8]	
 	
 	#<usage> 
-	#single run: nohup python -u rnaSeqpipe.py <projDir_path> <sample_name> <timepoint/None> <RUN_ID> <name_Dir_proton_server> <Proton_name (MER/PLU)> <backed_up (Yes/No)> <single> > /dev/null 2>&1&
-	#merged run: nohup python -u rnaSeqpipe.py <projDir_path> <sample_name> <timepoint/None> <Merged> <NA> <NA> <NA> <merged> > /dev/null 2>&1&
+	#single run: nohup python -u rnaSeqpipe.py <projDir_path> <sample_name> <timepoint/None> <RUN_ID> <name_Dir_proton_server> <Proton_name (MER/PLU)> <single> <passwd> > /dev/null 2>&1&
+	#merged run: nohup python -u rnaSeqpipe.py <projDir_path> <sample_name> <timepoint/None> <Merged> <NA> <NA> <merged> <NA> > /dev/null 2>&1&
 	
 	#create a separate runlog file that will be stored in a temp directory and moved to the run directory after the run is complete
 	if timePoint != 'None':
@@ -180,17 +229,17 @@ if __name__ == "__main__":
 		outlog = os.path.join(projDir,'temp','runlog'+sampleName+'-'+runId+'-'+datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
 	with open(outlog, 'a') as logfile:
 		logfile.write('Execution started at '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'\n')
-		if backedUp == 'Yes':
-			logfile.write('This run was archived\n')
-		elif backedUp == 'No':
-			logfile.write('This run was not yet archived\n')
+		#if backedUp == 'Yes':
+		#	logfile.write('This run was archived\n')
+		#elif backedUp == 'No':
+		#	logfile.write('This run was not yet archived\n')
 	
 	#run analysis for a single run
 	if merged_single == 'single':
 		with open(outlog, 'a') as logfile:
 			logfile.write('This is a single-run analysis of %s of sample %s\n' %(runId,sampleName))
 		#copy the bam & index files
-		copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,backedUp,outlog,passwd)
+		copybam(projDir,sampleName,timePoint,runId,remoteDir,remoteId,outlog,passwd)
 	
 		# run the RNASeqPlugin inside the run directory
 		os.chdir(os.path.join(projDir,sampleName,runId))

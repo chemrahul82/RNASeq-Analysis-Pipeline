@@ -1,5 +1,11 @@
 ChangeLog:
+Last updated: 04/04/2016
 
 v1: only supports single-run analysis; no ERCC analysis included
-v2: supports both single and merged run analysis; no ERCC analysis included
+v2: supports both single and merged run analysis; no ERCC analysis included;
+v2.1: supports both single and merged run analysis; no ERCC analysis included; all possible locations for the mapped/umnapped
+        bam file in the remote server are searched. Users don't need to provide backup status info; USE THIS FOR NOW
+
+
 v3: UNDER DEVELOPMENT; supports both single and merged run analysis; ERCC analysis included
+
